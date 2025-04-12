@@ -116,7 +116,7 @@ def contact():
     return render_template('contact_us.html')
 
 # Booking page route
-@app.route('/b1', methods=['GET'])
+@app.route('/b1', methods=['GET'], endpoint='b1')  # Add explicit endpoint
 def booking_page():
     if 'user' not in session:
         return redirect(url_for('login'))
