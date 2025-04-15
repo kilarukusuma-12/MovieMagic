@@ -268,25 +268,23 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Try to get booking data directly from the request form data
             let bookingData = {
-                movie: {
-                    name: "{{ request.form.get('movie', '') }}",
-                    // genre: "{{ request.form.get('genre', 'Action') }}",
-                    // duration: "{{ request.form.get('duration', '2h 30m') }}",
-                    // language: "{{ request.form.get('language', 'English') }}"
-                },
-                theater: {
-                    name: "{{ request.form.get('theater', '') }}",
-                    location: "{{ request.form.get('address', '') }}"
-                },
-                date: "{{ request.form.get('date', '') }}",
-                time: "{{ request.form.get('time', '') }}",
-                seats: "{{ request.form.get('selected_seats', '') }}",
-                totalAmount: "{{ request.form.get('total_price', '0') }}",
-                customer: {
-                    name: "{{ request.form.get('name', '') }}",
-                    email: "{{ request.form.get('email', '') }}"
-                }
-            };
+    movie: {
+        name: "{{ booking.movie_name }}",
+    },
+    theater: {
+        name: "{{ booking.theater }}",
+        location: "{{ booking.address }}"
+    },
+    date: "{{ booking.date }}",
+    time: "{{ booking.time }}",
+    seats: "{{ booking.seats }}",
+    totalAmount: "{{ booking.amount_paid }}",
+    customer: {
+        name: "{{ booking.user_name }}",
+        email: "{{ booking.booked_by }}"
+    },
+    bookingId: "{{ booking.booking_id }}"
+};
             
             // If some key data is missing, try to get from session
             if (!bookingData.movie.name || !bookingData.theater.name) {
