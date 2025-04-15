@@ -367,11 +367,10 @@
                     <input type="hidden" name="theater" value="{{ theater }}">
                     <input type="hidden" name="address" value="{{ address }}">
                     <input type="hidden" name="price" value="{{ price }}">
-                    <!-- Add these hidden fields -->
                     <input type="hidden" name="date" id="hiddenDate">
                     <input type="hidden" name="time" id="hiddenTime">
-                    <input type="hidden" name="seats" id="hiddenSelectedSeats"> <!-- Rename from selected_seats -->
-                    <input type="hidden" name="amount" id="hiddenTotalPrice"> <!-- Rename from total_price -->
+                    <input type="hidden" name="seats" id="hiddenSelectedSeats">
+                    <input type="hidden" name="amount" id="hiddenTotalPrice">
                 
                     <!-- Selected Seats Display -->
                     <div class="form-group">
@@ -450,8 +449,10 @@
         const moviePoster = document.getElementById("moviePoster");
         
         // Form Hidden Inputs
-        const selectedSeatsInput = document.getElementById("hiddenSelectedSeats");
-        const totalPriceInput = document.getElementById("hiddenTotalPrice");
+        const hiddenDate = document.getElementById("hiddenDate");
+        const hiddenTime = document.getElementById("hiddenTime");
+        const hiddenSelectedSeats = document.getElementById("hiddenSelectedSeats");
+        const hiddenTotalPrice = document.getElementById("hiddenTotalPrice");
     
         // Function to parse URL parameters
         function getUrlParams() {
@@ -494,14 +495,6 @@
         //         moviePoster.src = "https://via.placeholder.com/200x300";
         //     }
         // }
-
-        function updateFormFields() {
-    // Update form hidden inputs
-    document.getElementById("hiddenDate").value = selectedDate;
-    document.getElementById("hiddenTime").value = selectedTime;
-    document.getElementById("hiddenSelectedSeats").value = Array.from(selectedSeats).join(",");
-    document.getElementById("hiddenTotalPrice").value = document.getElementById("totalPrice").textContent;
-}
     
         function generateDateOptions() {
             const dateSelector = document.getElementById("dateSelector");
@@ -536,6 +529,7 @@
                     document.querySelectorAll(".date-item").forEach(item => item.classList.remove("selected"));
                     dateDiv.classList.add("selected");
                     selectedDate = dateString;
+                    hiddenDate.value = selectedDate; // Update hidden input
                     
                     // Update time options
                     generateTimeOptions(i === 0); // Check if it's today
@@ -549,6 +543,7 @@
             
             // Set initial selected date
             selectedDate = today.toISOString().split('T')[0];
+            hiddenDate.value = selectedDate; // Set initial hidden date value
             
             // Generate initial time options
             generateTimeOptions(true); // It's today initially
@@ -579,6 +574,7 @@
                         document.querySelectorAll(".time-item").forEach(item => item.classList.remove("selected"));
                         timeDiv.classList.add("selected");
                         selectedTime = time;
+                        hiddenTime.value = selectedTime; // Update hidden input
                         
                         // Generate seats after time selection
                         generateSeats();
@@ -604,33 +600,6 @@
                 timeSelector.appendChild(noTimesDiv);
             }
         }
-
-
-        // Add this to your toggleSeatSelection function
-function toggleSeatSelection(seatId) {
-    if (selectedSeats.has(seatId)) {
-        selectedSeats.delete(seatId);
-    } else {
-        selectedSeats.add(seatId);
-    }
-    updatePrice();
-    updateSelectedSeatsList();
-    updateConfirmButton();
-    updateFormFields(); // Add this line
-}
-
-// Also add to date and time selection handlers
-dateDiv.addEventListener("click", function() {
-    // ... existing code ...
-    selectedDate = dateString;
-    updateFormFields(); // Add this line
-});
-
-timeDiv.addEventListener("click", function() {
-    // ... existing code ...
-    selectedTime = time;
-    updateFormFields(); // Add this line
-});
     
         function generateSeats() {
             seatContainer.innerHTML = ''; // Clear previous seats
@@ -725,9 +694,9 @@ timeDiv.addEventListener("click", function() {
             convenienceFee.textContent = fee;
             totalPrice.textContent = total;
             
-            // Update form hidden input
-            selectedSeatsInput.value = Array.from(selectedSeats).join(",");
-            totalPriceInput.value = total;
+            // Update form hidden inputs
+            hiddenSelectedSeats.value = Array.from(selectedSeats).join(",");
+            hiddenTotalPrice.value = total;
         }
     
         function updateConfirmButton() {
