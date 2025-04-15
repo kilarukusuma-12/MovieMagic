@@ -367,8 +367,11 @@
                     <input type="hidden" name="theater" value="{{ theater }}">
                     <input type="hidden" name="address" value="{{ address }}">
                     <input type="hidden" name="price" value="{{ price }}">
-                    <input type="hidden" name="selected_seats" id="hiddenSelectedSeats">
-                    <input type="hidden" name="total_price" id="hiddenTotalPrice">
+                    <!-- Add these hidden fields -->
+                    <input type="hidden" name="date" id="hiddenDate">
+                    <input type="hidden" name="time" id="hiddenTime">
+                    <input type="hidden" name="seats" id="hiddenSelectedSeats"> <!-- Rename from selected_seats -->
+                    <input type="hidden" name="amount" id="hiddenTotalPrice"> <!-- Rename from total_price -->
                 
                     <!-- Selected Seats Display -->
                     <div class="form-group">
@@ -491,6 +494,14 @@
         //         moviePoster.src = "https://via.placeholder.com/200x300";
         //     }
         // }
+
+        function updateFormFields() {
+    // Update form hidden inputs
+    document.getElementById("hiddenDate").value = selectedDate;
+    document.getElementById("hiddenTime").value = selectedTime;
+    document.getElementById("hiddenSelectedSeats").value = Array.from(selectedSeats).join(",");
+    document.getElementById("hiddenTotalPrice").value = document.getElementById("totalPrice").textContent;
+}
     
         function generateDateOptions() {
             const dateSelector = document.getElementById("dateSelector");
@@ -593,6 +604,33 @@
                 timeSelector.appendChild(noTimesDiv);
             }
         }
+
+
+        // Add this to your toggleSeatSelection function
+function toggleSeatSelection(seatId) {
+    if (selectedSeats.has(seatId)) {
+        selectedSeats.delete(seatId);
+    } else {
+        selectedSeats.add(seatId);
+    }
+    updatePrice();
+    updateSelectedSeatsList();
+    updateConfirmButton();
+    updateFormFields(); // Add this line
+}
+
+// Also add to date and time selection handlers
+dateDiv.addEventListener("click", function() {
+    // ... existing code ...
+    selectedDate = dateString;
+    updateFormFields(); // Add this line
+});
+
+timeDiv.addEventListener("click", function() {
+    // ... existing code ...
+    selectedTime = time;
+    updateFormFields(); // Add this line
+});
     
         function generateSeats() {
             seatContainer.innerHTML = ''; // Clear previous seats
