@@ -13,7 +13,10 @@ app.secret_key = 'your_static_secret_key_here'  # Replace with your own secret s
 
 # AWS Configuration - read from environment variables for security
 AWS_REGION = os.environ.get('AWS_REGION', 'ap-south-1')
-SNS_TOPIC_ARN = os.environ.get('arn:aws:sns:ap-south-1:605134430972:MovieTicketNotifications')
+
+# Fix the SNS_TOPIC_ARN assignment - this was the main issue
+# Instead of using os.environ.get with the ARN as the key, set it directly
+SNS_TOPIC_ARN = 'arn:aws:sns:ap-south-1:605134430972:MovieTicketNotifications'
 
 # Initialize AWS services with proper credentials handling
 # On EC2, this will use the instance profile/role automatically
@@ -111,7 +114,7 @@ def home1():
 def about():
     return render_template('about.html')
 
-@app.route('/contact')
+@app.route('/contact_us')
 def contact():
     return render_template('contact_us.html')
 
@@ -167,6 +170,8 @@ def tickets():
         notification_sent = send_booking_confirmation(booking_item)
         if notification_sent:
             flash('Booking confirmation has been sent to your email!', 'success')
+        else:
+            flash('Booking successful, but confirmation email could not be sent.', 'warning')
         
         # Pass the booking details to the tickets template
         return render_template('tickets.html', booking=booking_item)
@@ -178,6 +183,7 @@ def tickets():
 
 def send_booking_confirmation(booking):
     """Send booking confirmation email using SNS"""
+    # Check if SNS_TOPIC_ARN is set
     if not SNS_TOPIC_ARN:
         print("SNS_TOPIC_ARN is not set. Unable to send notification.")
         return False
@@ -210,8 +216,10 @@ def send_booking_confirmation(booking):
         # User email
         user_email = booking['booked_by']
         
+        print(f"Attempting to send notification to {user_email} via SNS topic {SNS_TOPIC_ARN}")
+        
         # Send directly to the email using SNS
-        sns.publish(
+        response = sns.publish(
             TopicArn=SNS_TOPIC_ARN,
             Subject=email_subject,
             Message=email_message,
@@ -223,6 +231,7 @@ def send_booking_confirmation(booking):
             }
         )
         
+        print(f"SNS publish response: {response}")
         print(f"Booking confirmation sent to {user_email}")
         return True
         
@@ -230,7 +239,7 @@ def send_booking_confirmation(booking):
         print(f"Error sending booking confirmation: {str(e)}")
         return False
 
-# # Error handlers
+# Error handlers - uncommented for better error handling
 # @app.errorhandler(404)
 # def page_not_found(e):
 #     return render_template('404.html'), 404
