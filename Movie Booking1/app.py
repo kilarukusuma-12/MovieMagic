@@ -139,12 +139,12 @@ def tickets():
     try:
         # Extract booking details from form
         movie_name = request.form.get('movie')
-        booking_date = request.form.get('date')
+        booking_date = request.form.get('date')  
         show_time = request.form.get('time')
         theater_name = request.form.get('theater')
         theater_address = request.form.get('address')
-        selected_seats = request.form.get('seats')
-        amount_paid = request.form.get('amount')
+        selected_seats = request.form.get('seats')  # Changed from selected_seats
+        amount_paid = request.form.get('amount')    # Changed from total_price
         
         # Generate a unique booking ID
         booking_id = f"MVM-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8]}"
@@ -170,8 +170,6 @@ def tickets():
         notification_sent = send_booking_confirmation(booking_item)
         if notification_sent:
             flash('Booking confirmation has been sent to your email!', 'success')
-        else:
-            flash('Booking successful, but confirmation email could not be sent.', 'warning')
         
         # Pass the booking details to the tickets template
         return render_template('tickets.html', booking=booking_item)
