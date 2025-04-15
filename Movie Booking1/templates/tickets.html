@@ -266,116 +266,145 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-    // Get booking data from Flask's passed 'booking' variable
-    let bookingData = {
-        movie: {
-            name: "{{ booking.movie_name }}"
-        },
-        theater: {
-            name: "{{ booking.theater }}",
-            location: "{{ booking.address }}"
-        },
-        date: "{{ booking.date }}",
-        time: "{{ booking.time }}",
-        seats: "{{ booking.seats }}",
-        totalAmount: "{{ booking.amount_paid }}",
-        bookingId: "{{ booking.booking_id }}",
-        customer: {
-        name: "{{ booking.user_name }}",
-        email: "{{ booking.booked_by }}"
-        }
-    };
-    
-    // Fill in ticket details
-    document.getElementById('movieTitle').textContent = bookingData.movie.name;
-    
-    // Format date for better display
-    let dateObj;
-    try {
-        // If date is provided, use it
-        if (bookingData.date) {
-            dateObj = new Date(bookingData.date);
-        } else {
-            // Otherwise, use current date
-            dateObj = new Date();
-        }
-    } catch (e) {
-        console.error("Error parsing date:", e);
-        dateObj = new Date();
-    }
-    
-    const formattedDate = dateObj.toLocaleDateString('en-US', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-    });
-    document.getElementById('showDate').textContent = formattedDate;
-    
-    document.getElementById('showTime').textContent = bookingData.time || "7:00 PM";
-    document.getElementById('theaterName').textContent = bookingData.theater.name;
-    document.getElementById('theaterAddress').textContent = bookingData.theater.location;
-    
-    // Use the booking ID from the database
-    document.getElementById('bookingId').textContent = bookingData.bookingId;
-    
-    document.getElementById('customerName').textContent = bookingData.customer.name;
-    
-    // Create seat tags
-    const seatsContainer = document.getElementById('seatsContainer');
-    seatsContainer.innerHTML = ''; // Clear any existing content
-    
-    if (bookingData.seats && bookingData.seats.includes(',')) {
-        bookingData.seats.split(',').forEach(seat => {
-            if (seat.trim()) {
-                const seatTag = document.createElement('div');
-                seatTag.classList.add('seat-tag');
-                seatTag.textContent = seat.trim();
-                seatsContainer.appendChild(seatTag);
+            // Try to get booking data directly from the request form data
+            let bookingData = {
+                movie: {
+                    name: "{{ request.form.get('movie', '') }}",
+                    // genre: "{{ request.form.get('genre', 'Action') }}",
+                    // duration: "{{ request.form.get('duration', '2h 30m') }}",
+                    // language: "{{ request.form.get('language', 'English') }}"
+                },
+                theater: {
+                    name: "{{ request.form.get('theater', '') }}",
+                    location: "{{ request.form.get('address', '') }}"
+                },
+                date: "{{ request.form.get('date', '') }}",
+                time: "{{ request.form.get('time', '') }}",
+                seats: "{{ request.form.get('selected_seats', '') }}",
+                totalAmount: "{{ request.form.get('total_price', '0') }}",
+                customer: {
+                    name: "{{ request.form.get('name', '') }}",
+                    email: "{{ request.form.get('email', '') }}"
+                }
+            };
+            
+            // If some key data is missing, try to get from session
+            if (!bookingData.movie.name || !bookingData.theater.name) {
+                try {
+                    // Try to get from sessionStorage
+                    const storedData = sessionStorage.getItem('bookingData');
+                    if (storedData) {
+                        bookingData = JSON.parse(storedData);
+                    }
+                } catch (e) {
+                    console.error("Error parsing booking data from sessionStorage:", e);
+                }
+            }
+            
+            // Proceed only if we have the minimum required data
+            if (bookingData && bookingData.movie && bookingData.movie.name) {
+                // Fill in ticket details
+                document.getElementById('movieTitle').textContent = bookingData.movie.name;
+                // document.getElementById('movieGenre').textContent = bookingData.movie.genre;
+                // document.getElementById('movieDuration').textContent = bookingData.movie.duration;
+                // document.getElementById('movieLanguage').textContent = bookingData.movie.language;
+                
+                // Format date for better display
+                let dateObj;
+                try {
+                    // If date is provided, use it
+                    if (bookingData.date) {
+                        dateObj = new Date(bookingData.date);
+                    } else {
+                        // Otherwise, use current date
+                        dateObj = new Date();
+                    }
+                } catch (e) {
+                    console.error("Error parsing date:", e);
+                    dateObj = new Date();
+                }
+                
+                const formattedDate = dateObj.toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+                document.getElementById('showDate').textContent = formattedDate;
+                
+                document.getElementById('showTime').textContent = bookingData.time || "7:00 PM";
+                document.getElementById('theaterName').textContent = bookingData.theater.name;
+                document.getElementById('theaterAddress').textContent = bookingData.theater.location;
+                
+                // Generate random booking ID
+                const bookingId = 'BK' + Date.now().toString().slice(-8);
+                document.getElementById('bookingId').textContent = bookingId;
+                
+                document.getElementById('customerName').textContent = bookingData.customer.name;
+                
+                // Create seat tags
+                const seatsContainer = document.getElementById('seatsContainer');
+                seatsContainer.innerHTML = ''; // Clear any existing content
+                
+                if (bookingData.seats && bookingData.seats.includes(',')) {
+                    bookingData.seats.split(',').forEach(seat => {
+                        if (seat.trim()) {
+                            const seatTag = document.createElement('div');
+                            seatTag.classList.add('seat-tag');
+                            seatTag.textContent = seat.trim();
+                            seatsContainer.appendChild(seatTag);
+                        }
+                    });
+                } else if (bookingData.seats && bookingData.seats.trim()) {
+                    // For a single seat
+                    const seatTag = document.createElement('div');
+                    seatTag.classList.add('seat-tag');
+                    seatTag.textContent = bookingData.seats.trim();
+                    seatsContainer.appendChild(seatTag);
+                }
+                
+                document.getElementById('amountPaid').textContent = '₹' + bookingData.totalAmount;
+                
+                // Store ticket in localStorage for future reference
+                saveTicketToStorage(bookingData, bookingId);
+                
+                // Save the booking data to sessionStorage for potential reuse
+                sessionStorage.setItem('bookingData', JSON.stringify(bookingData));
+            } else {
+                // If no valid booking data found, show alert and redirect
+                alert('Booking data not found. Redirecting to home page.');
+                window.location.href = '/home1';
             }
         });
-    } else if (bookingData.seats && bookingData.seats.trim()) {
-        // For a single seat
-        const seatTag = document.createElement('div');
-        seatTag.classList.add('seat-tag');
-        seatTag.textContent = bookingData.seats.trim();
-        seatsContainer.appendChild(seatTag);
-    }
-    
-    document.getElementById('amountPaid').textContent = '₹' + bookingData.totalAmount;
-    
-    // Store ticket in localStorage for future reference
-    saveTicketToStorage(bookingData);
-});
-
-function saveTicketToStorage(bookingData) {
-    // Get existing tickets or initialize empty array
-    let userTickets = [];
-    try {
-        const storedTickets = localStorage.getItem('userTickets');
-        if (storedTickets) {
-            userTickets = JSON.parse(storedTickets);
+        
+        function saveTicketToStorage(bookingData, bookingId) {
+            // Get existing tickets or initialize empty array
+            let userTickets = [];
+            try {
+                const storedTickets = localStorage.getItem('userTickets');
+                if (storedTickets) {
+                    userTickets = JSON.parse(storedTickets);
+                }
+            } catch (e) {
+                console.error("Error parsing stored tickets:", e);
+            }
+            
+            // Add current ticket
+            userTickets.push({
+                id: bookingId,
+                movieName: bookingData.movie.name,
+                movieImage: bookingData.movie.image || '',
+                theater: bookingData.theater.name,
+                date: bookingData.date || new Date().toISOString().split('T')[0],
+                time: bookingData.time || "7:00 PM",
+                seats: bookingData.seats,
+                totalAmount: bookingData.totalAmount,
+                bookingDate: new Date().toISOString()
+            });
+            
+            // Store updated tickets
+            localStorage.setItem('userTickets', JSON.stringify(userTickets));
         }
-    } catch (e) {
-        console.error("Error parsing stored tickets:", e);
-    }
-    
-    // Add current ticket
-    userTickets.push({
-        id: bookingData.bookingId,
-        movieName: bookingData.movie.name,
-        movieImage: '',
-        theater: bookingData.theater.name,
-        date: bookingData.date || new Date().toISOString().split('T')[0],
-        time: bookingData.time || "7:00 PM",
-        seats: bookingData.seats,
-        totalAmount: bookingData.totalAmount,
-        bookingDate: new Date().toISOString()
-    });
-    
-    // Store updated tickets
-    localStorage.setItem('userTickets', JSON.stringify(userTickets));
-}
     </script>
 </body>
 </html>
